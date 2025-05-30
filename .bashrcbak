@@ -1,0 +1,77 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+    . /etc/bashrc
+fi
+
+# User specific environment
+if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]; then
+    PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+fi
+export PATH
+
+# Uncomment the following line if you don't like systemctl's auto-paging feature:
+# export SYSTEMD_PAGER=
+
+# User specific aliases and functions
+if [ -d ~/.bashrc.d ]; then
+    for rc in ~/.bashrc.d/*; do
+        if [ -f "$rc" ]; then
+            . "$rc"
+        fi
+    done
+fi
+unset rc
+
+history -c
+
+last
+sudo dnf5 repolist
+sudo dnf5 repoinfo
+sudo dnf5 autoremove
+sudo dnf5 clean all
+sudo dnf5 check
+
+alias ff='fastfetch | lolcat'
+alias dnf='dnf5'
+alias ins='sudo dnf5 install '
+alias update='sudo dnf5 update && sudo dnf5 upgrade --refresh'
+alias hash='sha256sum'
+alias openports='sudo lsof -nP -iTCP -sTCP:LISTEN'
+alias cursor='/opt/cursor.appimage'
+#!/bin/bash
+echo "y/n" 
+read yorn
+
+if [ "$yorn" == "y" ]; then
+	
+	update
+	sudo dnf5 autoremove
+	/home/user-fedora/Downloads/Scripts/iptables.sh
+	ff
+else	
+	echo ""
+fi
+last
+ls -alt
+sleep 1
+ff
+/home/user-fedora/Downloads/Scripts/pokeget/pokeget-main/bashscr.sh 
+
+echo "ShortCut Commands:"
+echo "ff = fastfetch"
+echo "update = sudo dnf5 update"
+echo "openports =  sudo lsof -nP -iTCP -sTCP:LISTEN"
+echo "Run Cursor IDE : cursor" 
+
+echo -e "\n"
+read -p "Live Log? (y/n)" log
+
+if [ "$log" == "y" ]; then
+
+	qterminal -e sudo journalctl -f
+
+else
+	echo ""
+fi
