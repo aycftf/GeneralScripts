@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 
 #Find local processes ran via user
@@ -11,8 +11,8 @@ if [ -z "$pidofthing" ]; then
 	exit 0
 
 else
-	echo -n "YOUR APPS PID:" && ps -u "$x" | grep "$proc" | cut -d ' ' -f 4
-	read -p "Enter pid here: " pid
 	echo "YOUR BINARIES RUN LOCATION:"
-	ls -l /proc/"$pid"/exe
+	ls -l /proc/"$pidofthing"/exe
+	echo -e "YOUR BINARIES PID ON THE SYSTEM: \n $pidofthing"
+	exit 0 
 fi
