@@ -1,9 +1,11 @@
-import os
+import os, pdb
 import sys
 import subprocess
 import sys
 import re
+import platform
 import time
+from params import IP4_PARAMS
 
 
 #Script for sysctl Hardening Parameters and Kernal Hardening
@@ -12,57 +14,48 @@ import time
 
 #https://linux-audit.com/kernel/sysctl/kernel/
 #Lynis audit system
+#github.com/alegrey91/systemd-service-hardening/blob/master/systemd-service-hardening.pdf
+#https://blog.sergeantbiggs.net/posts/hardening-applications-with-systemd/ 
 #sudo systctl -A
 
 
-IP4_PARAMS = { 
-	'net.ipv4.conf.default.accept_redirects' : "0", 
-	'net.inet.ip.linklocal.in.allowbadttl' : "0", 
-	'net.ipv4.ip_forward' : "0", 
-	'net.ipv4.conf.all.accept_source_route' : "0", 
-	'net.ipv4.conf.all.secure_redirects' : "0", 
-	'net.ipv4.conf.all.log_martians' : "0", 
-	'net.ipv4.conf.default.log_martians' : "0", 
-	'net.ipv4.icmp_echo_ignore_broadcasts' : "0", 
-	'net.ipv4.icmp_ignore_bogus_error_responses' : "0", 
-	'net.ipv4.tcp_syncookies' : 0, 
-	'net.ipv4.conf.all.send_redirects' : 0, 
-	'net.ipv4.conf.default.send_redirects' : 0}
-IP6_PARAMS = { 'net.ipv6.conf.all.disable_ipv6', 'net.ipv6.conf.all.addr_gen_mode', 'net.ipv6.conf.all.autoconf', 'net.ipv6.conf.all.forwarding', 'net.ipv6.conf.all.accept_dad', 'net.ipv6.conf.all.accept_ra', 'net.ipv6.conf.all.accept_ra_from_local', 'net.ipv6.conf.all.accept_untracked_na ' }
-KERNAL_PARAMS ={  
-	'kernel.yama.ptrace_scope', 
-	'fs.protected_fifos', 
-	'fs.protected_hardlinks',
-	 'fs.protected_regular', 
-	 'fs.protected_symlinks', 
-	 'fs.suid_dumpable', 
-	 'kernel.core_uses_pid', 
-	 'kernel.apparmor_restrict_unprivileged_unconfined'}
 
+DIR = os.getcwd()
+PARAMS = IP4_PARAMS.items()
 REMOVE_TRAILING_NUMS = r'\d+'
 
-def check(value):
+#Function to see if user runs with root perms that returns a bool
+def whoami():
+	return os.getuid() == 0
 
-	ifExist = None
 
-	##Conditional to test if sysctl parameter exists on system
-	try:
-		ifExist = subprocess.run(['sysctl', value], check=False, text=True, capture_output=True)
 
-		if "permission denied: " in ifExist.stderr:
-			print("Missing perms")
-			return None
+def whatsmyos():
+	os_name = platform.system()
+	if os_name == "Linux":
+		try:
+			ubuntu = subprocess.run(['apt-get', 'update', '-y'], text=True, check=True, capture_output=True)
 
-	except subprocess.CalledProcessError:
-		print(f"param: {value} Not Found In System!")
-	except Exception as pt:
-		print(f"unexpected error: {pt}")
-		return None
+			if ubuntu.returncode == 0:
+				
+				if os.path.exists(f"{DIR}/allsystemdservices.txt"):
+					print("File exists, deleing!")
+
+				findsystemdservices = subprocess.run(['systemd-analyze', 'security'], check=True, text=True, capture_output=True)
+
+
+				if findsystemdservices.returncode == 0:
+					with open('allsystemdservices.txt', 'w') as e:
+						e.write(findsystemdservices.stdout)
+
+			
+		except subprocess.SubprocessError as f:
+			sys.exit(f"{f}")
 	
-	return ifExist
+		return ubuntu.stdout
+			
 
 
-	
 
 
 
@@ -80,6 +73,7 @@ def getParams():
 	#We then encode this output to bytes to avoid str has no attr fileno, as we expect a byte reply
 	#Use _ to avoid returning tuple with error, just string output
 	output, _ = cutSysctl.communicate(input=grabSysctl.stdout.encode())
+
 	#Decode our byte data to reg utf-8 string text
 	#splitlines to get easy output to produce list
 	if output:
@@ -93,7 +87,7 @@ def getParams():
 				currentVal, currentKey = x.split(" = ", 1) 
 			
 				#Don't bother with kernal params = NONE
-				if check(currentVal) and currentKey != None or "NONE":
+				if currentKey != None or "NONE":
 					##We now can put currentVal with key pair currentKey in new Dictioanry
 					#Instead of append, we simply use the '=' to instead put values together in each indicie
 					#Ex output:    net.iv4.log.martians : 0
@@ -108,9 +102,11 @@ def getParams():
 
 
 def correct():
+	okparams = []
 	c = 0
 	pxt = getParams()
-	for key, val in IP4_PARAMS.items():
+
+	for key, val in PARAMS:
 		#use .get to grab val associated with pair
 		checkKey = pxt.get(key.lower())
 		if checkKey:
@@ -118,13 +114,43 @@ def correct():
 				print(f"The value for {key} does not match the key for secure params: Current: {checkKey} Wanted: {val}")
 				time.sleep(0.8)
 			else:
-				print(f" The value for {key} and {val} for key are okay!")
+				print(f" The value {val} for key: {key} is okay!")
+				okparams.append(key)
 				c += 1
+				time.sleep(1.2)
 
-	print(f"Unchanged Keys: {c}")
+	print(f"\n\n Unchanged Keys: {str(okparams)}")
+
+
+
+
+#Function to actually harden specific systemd service files
+def hardenCaps():
+	#For all unitpaths -- systemd-analyze unit-paths
+	#Check specific config file of service just edited:
+	#sudo systemd-analyze verify /lib/systemd/system/chrony.service
+
+
+
+	
+
+
+
+
+	pass
+
+
+
+
 
 def main():
-	print(correct())
+	who = whoami()
+	whats = whatsmyos()
+	if who:
+		if whats:
+			print(correct())
+	else:
+		sys.exit("Please run script with sudo or root privledges")
 
 if __name__ == "__main__":
 	main()
