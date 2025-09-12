@@ -1,0 +1,176 @@
+
+#ProtectSystem=strict		# Disable write to entire file hierarchy
+
+ We already had ProtectSystem= set to �full�. With this, only certain parts of the OS are mounted read-only for the service 
+(/usr, /boot, /etc). If we set it to strict, this extends to the complete file hierarchy.
+
+
+
+
+PrivateDevices=true		# Only allow access to pseudo-devices (eg: null, random, zero) in separate namespace	
+PrivateTmp=true			# Mount /tmp in own namespace
+ProtectKernelLogs=true		# Disable access to Kernel Logs
+ProtectProc=invisible		# Disable access to information about other processes
+PrivateUsers=true		# Disable access to other users on system
+ProtectHome=true		# Disable access to /home
+UMask=0077			# set umask
+
+
+RestrictNamespaces=true         		# Disable creating namespaces
+LockPersonality=true            		# Locks personality system call
+NoNewPrivileges=true            		# Service may not acquire new privileges
+ProtectKernelModules=true       		# Service may not load kernel modules
+SystemCallArchitectures=native  		# Only allow native system calls
+ProtectHostname=true            		# Service may not change host name
+RestrictAddressFamilies=AF_INET AF_INET6        # Service may only use IP address families
+RestrictRealtime=true				# Disable realtime privileges
+ProtectControlGroups=true			# Disable access to cgroups
+ProtectKernelTunables=true			# Disable write access to kernel variables
+RestrictSUIDSGID=true				# Disable setting suid or sgid bits
+ProtectClock=true                               # Disable changing system clock
+
+
+CapabilityBoundingSet and SystemCallFilter.
+
+The first option restricts (as its name suggests) capabilities. These are �privileges� that a process has. Examples of these capabilities include:
+
+    Read/write access to the Kernel audit log
+    Access to privileged BPF operations
+    Block system suspend
+    chown arbitrary files
+    kill arbitrary processes
+    change MAC address
+    Bind a socket to a port less than 1024
+    and many more
+
+Many of these capabilities are not needed for normal processes, and they can be especially dangerous 
+because they often ignore permissions (eg: CAP_CHOWN ignores filesystem permissions). Let�s disable all of them.
+
+
+CapabilityBoundingSet=
+
+
+If a service is in need of a whitelist, add such with 
+
+
+~CAP_SYS_PTRACE
+
+
+
+
+
+
+
+
+
+
+
+
+##SYSCTL PRIVS TO ADD!!!!!
+
+Performing test ID KRNL-6000 (Check sysctl key pairs in scan profile)
+2025-08-03 20:55:11 Result: sysctl key dev.tty.ldisc_autoload has a different value than expected in scan profile. Expected=0, Real=1
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 124 points (out of 206)
+2025-08-03 20:55:11 Result: sysctl key fs.protected_fifos has a different value than expected in scan profile. Expected=2, Real=1
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 124 points (out of 207)
+2025-08-03 20:55:11 Result: sysctl key fs.protected_hardlinks contains equal expected and current value (1)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 125 points (out of 208)
+2025-08-03 20:55:11 Result: sysctl key fs.protected_regular contains equal expected and current value (2)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 126 points (out of 209)
+2025-08-03 20:55:11 Result: sysctl key fs.protected_symlinks contains equal expected and current value (1)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 127 points (out of 210)
+2025-08-03 20:55:11 Result: sysctl key fs.suid_dumpable contains equal expected and current value (0)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 128 points (out of 211)
+2025-08-03 20:55:11 Result: key hw.kbd.keymap_restrict_change does not exist on this machine
+2025-08-03 20:55:11 Result: key kernel.core_setuid_ok does not exist on this machine
+2025-08-03 20:55:11 Result: sysctl key kernel.core_uses_pid has a different value than expected in scan profile. Expected=1, Real=0
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 128 points (out of 212)
+2025-08-03 20:55:11 Result: sysctl key kernel.ctrl-alt-del contains equal expected and current value (0)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 129 points (out of 213)
+2025-08-03 20:55:11 Result: sysctl key kernel.dmesg_restrict has a different value than expected in scan profile. Expected=1, Real=0
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 129 points (out of 214)
+2025-08-03 20:55:11 Result: key kernel.exec-shield does not exist on this machine
+2025-08-03 20:55:11 Result: key kernel.exec-shield-randomize does not exist on this machine
+2025-08-03 20:55:11 Result: sysctl key kernel.kptr_restrict has a different value than expected in scan profile. Expected=2, Real=0
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 129 points (out of 215)
+2025-08-03 20:55:11 Result: key kernel.maps_protect does not exist on this machine
+2025-08-03 20:55:11 Result: sysctl key kernel.modules_disabled has a different value than expected in scan profile. Expected=1, Real=0
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 129 points (out of 216)
+2025-08-03 20:55:11 Result: sysctl key kernel.perf_event_paranoid has a different value than expected in scan profile. Expected=3, Real=2
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 129 points (out of 217)
+2025-08-03 20:55:11 Result: sysctl key kernel.randomize_va_space contains equal expected and current value (2)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 130 points (out of 218)
+2025-08-03 20:55:11 Result: key kernel.suid_dumpable does not exist on this machine
+2025-08-03 20:55:11 Result: sysctl key kernel.sysrq has a different value than expected in scan profile. Expected=0, Real=502
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 130 points (out of 219)
+2025-08-03 20:55:11 Result: sysctl key kernel.unprivileged_bpf_disabled has a different value than expected in scan profile. Expected=1, Real=2
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 130 points (out of 220)
+2025-08-03 20:55:11 Result: key kernel.use-nx does not exist on this machine
+2025-08-03 20:55:11 Result: key kernel.yama.ptrace_scope does not exist on this machine
+2025-08-03 20:55:11 Result: key kern.sugid_coredump does not exist on this machine
+2025-08-03 20:55:11 Result: key net.core.bpf_jit_harden does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet6.icmp6.rediraccept does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet6.ip6.forwarding does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet6.ip6.fw.enable does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet6.ip6.redirect does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.icmp.bmcastecho does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.icmp.drop_redirect does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.icmp.rediraccept does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.icmp.timestamp does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.ip6.redirect does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.ip.accept_sourceroute does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.ip.check_interface does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.ip.forwarding does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.ip.linklocal.in.allowbadttl does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.ip.process_options does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.ip.random_id does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.ip.redirect does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.ip.sourceroute does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.tcp.always_keepalive does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.tcp.blackhole does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.tcp.drop_synfin does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.tcp.icmp_may_rst does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.tcp.nolocaltimewait does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.tcp.path_mtu_discovery does not exist on this machine
+2025-08-03 20:55:11 Result: key net.inet.udp.blackhole does not exist on this machine
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.all.accept_redirects contains equal expected and current value (0)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 131 points (out of 221)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.all.accept_source_route contains equal expected and current value (0)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 132 points (out of 222)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.all.bootp_relay contains equal expected and current value (0)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 133 points (out of 223)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.all.forwarding has a different value than expected in scan profile. Expected=0, Real=1
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 133 points (out of 224)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.all.log_martians has a different value than expected in scan profile. Expected=1, Real=0
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 133 points (out of 225)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.all.mc_forwarding contains equal expected and current value (0)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 134 points (out of 226)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.all.proxy_arp contains equal expected and current value (0)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 135 points (out of 227)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.all.rp_filter has a different value than expected in scan profile. Expected=1, Real=0
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 135 points (out of 228)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.all.send_redirects has a different value than expected in scan profile. Expected=0, Real=1
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 135 points (out of 229)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.default.accept_redirects has a different value than expected in scan profile. Expected=0, Real=1
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 135 points (out of 230)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.default.accept_source_route has a different value than expected in scan profile. Expected=0, Real=1
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 135 points (out of 231)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.conf.default.log_martians has a different value than expected in scan profile. Expected=1, Real=0
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 135 points (out of 232)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.icmp_echo_ignore_broadcasts contains equal expected and current value (1)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 136 points (out of 233)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.icmp_ignore_bogus_error_responses contains equal expected and current value (1)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 137 points (out of 234)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.tcp_syncookies contains equal expected and current value (1)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 138 points (out of 235)
+2025-08-03 20:55:11 Result: sysctl key net.ipv4.tcp_timestamps contains equal expected and current value (0 1)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 139 points (out of 236)
+2025-08-03 20:55:11 Result: sysctl key net.ipv6.conf.all.accept_redirects has a different value than expected in scan profile. Expected=0, Real=1
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 139 points (out of 237)
+2025-08-03 20:55:11 Result: sysctl key net.ipv6.conf.all.accept_source_route contains equal expected and current value (0)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 140 points (out of 238)
+2025-08-03 20:55:11 Result: key net.ipv6.conf.all.send_redirects does not exist on this machine
+2025-08-03 20:55:11 Result: sysctl key net.ipv6.conf.default.accept_redirects has a different value than expected in scan profile. Expected=0, Real=1
+2025-08-03 20:55:11 Hardening: assigned partial number of hardening points (0 of 1). Currently having 140 points (out of 239)
+2025-08-03 20:55:11 Result: sysctl key net.ipv6.conf.default.accept_source_route contains equal expected and current value (0)
+2025-08-03 20:55:11 Hardening: assigned maximum number of hardening points for this item (1). Currently having 141 points (out of 240)
