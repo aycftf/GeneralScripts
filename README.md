@@ -4,3 +4,5 @@ Repo Contents:
 - Sysctl tunable automation; i.e. formatting / hardening / provisioning
 - Find process PID, File Descriptor (mem map), and binary run location from name
 - Azure Blob storage automation (Upload / Delete)
+- Automatic external media encryption using LUKS and bash
+- CLONEZILLA install -> bootable iso utility for backing up data
