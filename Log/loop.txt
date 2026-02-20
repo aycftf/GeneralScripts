@@ -1,4 +1,0 @@
-security
-grub
-password
-system
