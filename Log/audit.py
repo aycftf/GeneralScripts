@@ -52,7 +52,7 @@ def run():
                             print("\n")
                             time.sleep(2)
                             ##TODO TODO: MUST PIPE TO GREP -V AUDIT SEARCHES
-                            ausearch = f"sudo ausearch -i -k {keyWords}"
+                            ausearch = f"sudo ausearch -k {keyWords}"
                             
                             #Subprocess runs a command to standard output ad error to terminal
                             #Optiuon shell=True: Allows shell process to be ran concurrently with live session
@@ -65,7 +65,7 @@ def run():
                             print(result.stdout)
                             print("Errors:", result.stderr)
                             
-                            time.sleep(4)
+                            time.sleep(2)
                             input("Input anything on keyboard to continue loop...")
                             os.system(clearme)
                     

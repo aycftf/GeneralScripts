@@ -300,29 +300,29 @@ gen=(
 	BPF
 	NETFILTER_CFG
 	USER_AVC
+	ALL
 )
 
 
-
-if python3 audit.py; then
-
-
+read -p "Loop thru All (a) specific rules? Or just general IoC (i)? (a/i): " io
+if [[ "$io" =~ a|A ]]; then
+	python3 audit.py
+fi
+GenLoop() {
+	datee=$(date)
 	user=$(whoami)
 	#Loop thru indicies 
 	for genn in "${gen[@]}"; do
 		echo -e "Searching Keyword "$genn" now... \n\n\n"
 		sleep 1
 		#Reference each keyword with ausearch framework
-		checkme=$(sudo ausearch -m "$genn" --start today)
-
-		echo "$checkme" >> genaudit.txt 
+		checkme=$(sudo ausearch -m "$genn" -ts recent)
+		echo "$checkme"
+		echo "$checkme" > genaudit_"$datee".txt 
 		if ! ls -l genaudit.txt| awk '{print $1}' | grep -q ".rw-r-----."; then
 			sudo chown -R "$user":"$user" genaudit.txt && sudo chmod 640 genaudit.txt
 		
 		fi
-		echo -e "Nothing found for "$genn"... Good Sign"
-		
-
 		sleep 1
 		echo -e "\n\n\n\n"
 	
@@ -337,8 +337,9 @@ if python3 audit.py; then
 	ausearch -k network_connect_4 | grep -v snapd | grep -v ssh | grep -v auditctl | grep "comm"
 	#exit
 
+}
 
-fi
+GenLoop
 
 #Show small human readable summary of events 
 sudo aureport --summary
