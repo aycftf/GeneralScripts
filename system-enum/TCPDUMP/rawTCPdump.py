@@ -115,11 +115,13 @@ class whoisLookup():
     def __init__(self):
         self.dump = TcpDump()
         self.remotes = self.dump.parseDumpRemote()
+        self.whoisPath = shutil.which("whois")
 	    #test fix of race condition from async
         #self.commWhois = sub.run(["which", "whois"], capture_output=True, text=True)
-        if not shutil.which("whois"):
-            print("whois command not found, please install whois and try again.")
-            return
+        if not self.whoisPath:
+            print("whois command not found, please install whois and try again (for remote lookups).")
+            print("Still logging each listening connection....")
+            raise Exception("whois command not found, please install whois and try again (for remote lookups).")
     
     async def lookup(self):
         for x in range(len(self.remotes)):
@@ -132,7 +134,7 @@ class whoisLookup():
 	        #Dont block event loop and just pause couroutine, also avoid rate limit
             await asyncio.sleep(1)
             #Actually run whois with subprocess, NO SHELL
-            result = sub.run(["/usr/bin/whois", str(ip.strip())], capture_output=True, text=True)
+            result = sub.run([str(self.whoisPath), str(ip.strip())], capture_output=True, text=True)
             #result = sub.run(["wh", str(ip.strip())], capture_output=True, text=True)
             #continue when user presses button 
             print(result.stdout)
