@@ -149,13 +149,13 @@ class whoisLookup():
     async def writeOutput(self):
         dump = self.remotes
         dir = os.path.join(LOCO, "Findings")
-        try:
-            os.makedirs(dir, exist_ok=True)
-            # perms : rwxr-xr-x
-            os.chmod(dir, 0o755)  
-        except Exception as e:
-            print(f"Failed to create output directory {dir}: {e}")
-            return
+        if not os.path.exists(dir):
+            try:
+                os.makedirs(dir, exist_ok=True)
+                # perms : rwxr-xr-x
+                os.chmod(dir, 0o755)  
+            except Exception as e:
+                raise IOError(f"Failed to create output directory {dir}: {e}")
         #Get current date in string format Hour Minute Second to append to output file name
         datee = datetime.datetime.now().strftime("%H-%M-%S")
         
@@ -173,7 +173,7 @@ class whoisLookup():
                         
                 except Exception as e:
                     print("Error writing to file: %s"% e)
-            rem = input("Remove previous log files?")
+            rem = input("Remove previous log files? (If First time running, skip).. (y\n):")
             if isinstance(rem, str) and rem.lower() == "y":
                 for file in os.listdir(dir):
                     if file.startswith("Raw_TCPDump_Output_") and not file.endswith(f"{datee}.txt"):
