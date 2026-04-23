@@ -1,10 +1,10 @@
-
 #Takes raw /proc/net/tcp output and parses it into a more human readable format.
 import subprocess as sub
 import socket, struct
 import time, os
 import datetime
 import asyncio 
+import shutil
 
 ##Get first actual function of the script first, then add the rest of the code. This is a good way to avoid getting lost in the details of the code and losing sight of the overall structure of the program.
 #This is just poc
@@ -12,16 +12,21 @@ LOCO = os.getcwd()
 
 class TcpDump:
     def __init__(self):
-        self.dumpProc = self.get_tcp_dump()
+        self.dumpProc = self.get_tcp_dump() 
+        self.dumpProcUdp = self.get_udp_dump() 
         self.parseProc = self.parseDump()
 
     def get_tcp_dump(self):
         #Get the raw tcp dump from /proc/net/tcp
         with open("/proc/net/tcp", "r") as f:
             return f.read()
-        with open("/proc/net/udp", "r") as f:
-            return f.read()
         
+        
+    def get_udp_dump(self):
+        #Get the raw udp dump from /proc/net/udp
+        with open("/proc/net/udp", "r") as u:
+            return u.read()
+
     #Convert a hex string to an IP address 
     #struct: Convert Python values to C structs, handle and convert to Python byte objects
     #<I: Little-endian unsigned int (4 bytes)
@@ -37,11 +42,14 @@ class TcpDump:
     def parseDump(self):
         #Parse the raw tcp dump and return a list of dictionaries containing the relevant information
         lines = self.dumpProc.splitlines()
+        linesUdp = self.dumpProcUdp.splitlines()
+        #Now slice both tcp and udp, remove headers, and parse
+        linelines = linesUdp[1:] + lines[1:]
         headers = lines[0].split()
         data = []
         #print(headers)
         entries = {}
-        for line in lines[1:]:
+        for line in linelines:
             feilds = line.split()
             #print(feilds)
             ##LOCAL ADDRESS SOCKETS
@@ -68,7 +76,8 @@ class TcpDump:
     #This function specifically looks for remote ports and services opened and listening + activley being used  
     def parseDumpRemote(self):
         final = []
-        seenAddr = set() ##use set instead of list object to store seen addresses as hashes internally
+        ##use set instead of list object to store seen addresses as hashes internally
+        seenAddr = set() 
 
         for entry in self.parseProc:
             for k, v in entry.items():
@@ -81,14 +90,6 @@ class TcpDump:
                             final.append(f"{key}: {value}" + ":" + f"{v['remote_port']}")
                     
         return final
-        '''
-        fields = line.split()
-        entry = {}
-        for i, header in enumerate(headers):
-            entry[header] = fields[i]
-        data.append(entry)
-    return data
-    '''
     
     def parseDumpLocal(self):
         final = []
@@ -114,8 +115,9 @@ class whoisLookup():
     def __init__(self):
         self.dump = TcpDump()
         self.remotes = self.dump.parseDumpRemote()
-        self.commWhois = sub.run(["which", "whois"], capture_output=True, text=True)
-        if self.commWhois.returncode != 0:
+	    #test fix of race condition from async
+        #self.commWhois = sub.run(["which", "whois"], capture_output=True, text=True)
+        if not shutil.which("whois"):
             print("whois command not found, please install whois and try again.")
             return
     
@@ -124,18 +126,22 @@ class whoisLookup():
             conn = self.remotes[x].split(": ")
             #Seperate ip and port to use in whois lookup
             ip, port = conn[1].split(":")
+            if str(ip.strip()).startswith("192"):
+                continue
             print("Checking %s on Listening Port %s"% (ip.strip(), port))
-            time.sleep(1)
+	        #Dont block event loop and just pause couroutine, also avoid rate limit
+            await asyncio.sleep(1)
             #Actually run whois with subprocess, NO SHELL
-            result = sub.run([self.commWhois.stdout.strip(), str(ip.strip())], capture_output=True, text=True)
+            result = sub.run(["/usr/bin/whois", str(ip.strip())], capture_output=True, text=True)
             #result = sub.run(["wh", str(ip.strip())], capture_output=True, text=True)
             #continue when user presses button 
-            #time.sleep(1.5) #Sleep for 3 seconds to avoid rate limiting
             print(result.stdout)
             #Avoid looping after last entry
             if self.remotes[x] != self.remotes[-1]:
                 print("Press Enter to continue to next lookup...")
                 input()
+		    #Sourced: https://stackoverflow.com/questions/55027940/is-run-in-executor-optimized-for-running-in-a-loop-with-coroutines
+            #input_future = asyncio.get_event_loop().run_in_executor(None, input)
     
     
     async def writeOutput(self):
@@ -165,8 +171,8 @@ class whoisLookup():
                         
                 except Exception as e:
                     print("Error writing to file: %s"% e)
-            rem = input("Remove previous outputs? (y/n): ")
-            if rem.lower() == "y":
+            rem = input("Remove previous log files?")
+            if isinstance(rem, str) and rem.lower() == "y":
                 for file in os.listdir(dir):
                     if file.startswith("Raw_TCPDump_Output_") and not file.endswith(f"{datee}.txt"):
                         try:
@@ -196,12 +202,13 @@ async def main():
     # instantiate once so we keep the same lookup results
     wl = whoisLookup()
     # if whois is not available, use constructor to print a message and set returncode
-    if getattr(wl, 'commWhois', None) and wl.commWhois.returncode != 0:
-        print(wl.commWhois.stderr.strip())
-        return
+    #if getattr(wl, 'commWhois', None) and wl.commWhois.returncode != 0:
+    #    print(wl.commWhois.stderr.strip())
+    #    return
     
-    #perform both lookups, and write stdout to file and new folder!
-    await asyncio.gather(wl.lookup(), wl.writeOutput())
+    #perform both lookups, and write stdout sequentially due to blocking inputs
+    await wl.writeOutput()
+    await wl.lookup()
 
 if __name__ == "__main__":
     asyncio.run(main())
