@@ -1,5 +1,5 @@
 ##Simple azurwe storage blob comm
-##Storage container static URL: https://storagebackupstuff.blob.core.windows.net/storagecontainer
+##EXAMPLE Storage container static URL: https://storagebackupstuff.blob.core.windows.net/storagecontainer
 ##Anonymous Access: No
 ##Access Method: SAS Token + URI
 ##Note: Ensure you install .\virt\Scripts\pip.exe install azure-storage-blob azure-identity, from the respective virt env
