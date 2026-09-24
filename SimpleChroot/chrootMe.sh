@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 rooot=$(echo -e "$UID")
 pwdd=$(pwd)
+chr=$(chroot recover/)
 if [[ "$root" -ne 0 ]]; then 
 	echo -e "Please run as root" && exit 1; 
 else 
@@ -17,7 +18,7 @@ else
 		mount -t sysfs sys recover/sys
 		mount -o bind /dev recover/dev
 		mount -t devpts pts recover/dev/pts
-		if chroot recover; then
+		if "$chr"; then
 			echo -e "Chroot Successful!"
 			ls -lah && pwd
 			exit 0
