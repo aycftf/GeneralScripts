@@ -1,0 +1,18 @@
+
+##Create a .cer and .key file using openssl
+openssl req -x509 -newkey rsa:4096 -nodes -keyout tlskey.key -out cert.crt -days 365 -subj "/C=US/ST=Michigan/L=Plymouth/O=LAN/OU=VNC/CN=vncserver.local"
+
+#Verify keys you just output, RUN TWICE:
+ff=$(type cipher.txt); [ -f cipher.txt ] && rm -f cipher.txt testtxt_hash.txt pubkey.pem test.txt || echo ""; openssl x509 -in cert.crt -noout -pubkey > pubkey.pem; echo -e "This message should stay intact within the file before & after the decryption :>" > test.txt; openssl pkeyutl -encrypt -in test.txt -pubin -inkey pubkey.pem -out cipher.txt; xx=$(openssl pkeyutl -decrypt -in cipher.txt -inkey tlskey.key| grep -iE "This message should stay intact within the file before & after the decryption") && echo -e "[*]KEYS ARE VERIFIED"; echo -e "Giving system time & decrypting $(ls -lah | grep -iE "cipher.txt") " && sleep 3; if [ -n "$xx" ]; then echo -e "[*] Exiting Now "; else echo -e "Failed to verify keys... "; fi 
+
+xx=$(openssl pkeyutl -decrypt -in cipher.txt -inkey tlskey.key| grep -iE "This message should stay intact within the file before & after the decryption") && echo -e "[*]KEYS ARE VERIFIED";
+
+#Print out modulous or certificate details:
+openssl x509 -in cert.crt -text -noout
+
+
+#Verify & print out key:
+openssl pkey -in tlskey.key -text -noout && openssl pkey -in tlskey.key -check -noout 
+
+#Extract public key out of cert file:
+openssl x509 -in cert.crt -noout -pubkey > pubkey.pem
