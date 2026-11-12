@@ -4,8 +4,8 @@ openssl req -x509 -newkey rsa:4096 -nodes -keyout tlskey.key -out cert.crt -days
 
 #Verify keys you just output:
 
-msg="This message should stay intact within the file before & after the decryption"; [ -f cipher.txt ] && rm -f cipher.txt testtxt_hash.txt pubkey.pem test.txt || echo ""; openssl x509 -in cert.crt -noout -pubkey > pubkey.pem; echo -e "This message should stay intact within the file before & after the decryption" > test.txt; openssl pkeyutl -encrypt -in test.txt -pubin -inkey pubkey.pem -out cipher.txt && rm test.txt; if file tlskey.key | grep -iE "private key" > /dev/null 2>&1 && file cert.crt| grep -iE "certificate" > /dev/null 2>&1 && [ "$(openssl pkey -in tlskey.key -pubout)" = "$(openssl x509 -in cert.crt -pubkey -noout)" ]; then echo -e "[*] KEYS ARE VERIFIED"; else echo -e "[*] VERIFICATION FAILED"; fi; echo -e "CURRENT MODULUS OF BOTH CERTIFICATE AND KEY: "; openssl x509 -in cert.crt -modulus -noout | openssl sha256 | grep "$(openssl rsa -in tlskey.key -modulus -noout | openssl sha256)" 
-
+msg="This message should stay intact within the file before & after the decryption"; [ -f cipher.txt ] && rm -f cipher.txt testtxt_hash.txt pubkey.pem test.txt || echo ""; openssl x509 -in cert.crt -noout -pubkey > pubkey.pem; echo -e "This message should stay intact within the file before & after the decryption" > test.txt; openssl pkeyutl -encrypt -in test.txt -pubin -inkey pubkey.pem -out cipher.txt && rm test.txt; if file tlskey.key | grep -iE "private key" > /dev/null 2>&1 && file cert.crt| grep -iE "certificate" > /dev/null 2>&1 && [ "$(openssl pkey -in tlskey.key -pubout)" = "$(openssl x509 -in cert.crt -pubkey -noout)" ] && [ "$(openssl pkeyutl -decrypt -in cipher.txt -inkey tlskey.key)" = "$msg" ]; then echo -e "[*] CERTS AND KEYS ARE VERIFIED"; else echo -e "[*] VERIFICATION FAILED"; fi; echo -e "CURRENT MODULUS OF BOTH CERTIFICATE AND KEY: "; openssl x509 -in cert.crt -modulus -noout | openssl sha256 | grep "$(openssl rsa -in tlskey.key -modulus -noout | openssl sha256)"
+ 
 
 #Print out modulous or certificate details:
 openssl x509 -in cert.crt -text -noout
